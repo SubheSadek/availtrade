@@ -1,7 +1,7 @@
 <template>
         <div class="container mt-5" style="background-color: #FFF;">
         <div class="columns is-gapless">
-            <div class="column is-one-fifth pr-5">
+            <div class="column is-one-fifth pr-5" style="width:22%">
 
                 <!-- My Market -->
                 <div class="sidebar-navbar" style="background-color: #FFF;">
@@ -9,9 +9,32 @@
 
                     <ul>
 
-                        <a v-for="(cat, index) in categories" :key='index' :href="`https://availtrade.com/category/${cat.catgeory_slug}/heightolow`" style="color:black ;">
+                        <a v-for="(cat, index) in getFilterCats" :key='index' :href="`https://availtrade.com/category/${cat.catgeory_slug}/heightolow`" :title="cat.category_name" style="color:black ;">
                             <li id="dropdown" class="evanyou">
-                                <img :src="`https://availtrade.com/public/images/${cat.category_icon}`" /> <span style="line-height: 1.6 !important;">{{cat.category_name}}</span>                                
+                                <img :src="`https://availtrade.com/public/images/${cat.category_icon}`" /> <span style="line-height: 1.6 !important;">{{cat.category_name}}</span>   
+                                <img src="https://availtrade.com/public/images/right-arrow.png" class="is-pulled-right" style="width: 10px !important; height: 10px; margin-top: 16px; margin-right: 20px;" />
+                                <div class="sidebar-navbar-mega-dropdown" style="width:750px!important;" v-if="cat.sub_cats && cat.sub_cats.length > 0">
+                                    <div v-for="(subcat, subcatIndex) in cat.sub_cats" :key="subcatIndex">
+                                        <!-- v-if="cat.sub_cats.length > 6 ? cat.sub_cats.length < 5 : subcatIndex" -->
+                                        <div style="width: 33%; float:left; height: auto; height: 240px !important;" v-if="cat.sub_cats.length <= 5? subcatIndex < 5: subcatIndex < 6">
+                                            <a :href="`https://availtrade.com/seccategory/${subcat.secondary_category_name}/heightolow`" title="" target="_blank" style="color:black;">
+                                                <p><strong>{{subcat.secondary_category_name}}</strong></p>
+                                            </a>
+                                            <ul v-if="subcat.tertiarycategorys && subcat.tertiarycategorys.length > 0">
+                                                <span  v-for="(ter, terIndex) in subcat.tertiarycategorys" :key="terIndex">
+                                                   <li v-if="subcat.tertiarycategorys.length <= 5? terIndex < 5: terIndex < 6">
+                                                        <a :href="`https://availtrade.com/tercategory/${ter.tartiary_category_slug}/heightolow`">
+                                                        {{ ter.tartiary_category_name}}
+                                                        </a>
+                                                    </li> 
+                                                </span>
+                                                
+                                            </ul>
+                                        </div>
+                                        
+                                    </div>
+                                </div>                             
+
                             </li>
                         </a>
                        
@@ -66,14 +89,34 @@ export default {
         return{
             categories: [],
             threeProducs: [],
-            sliders: []
+            sliders: [],
+            secondCats: [],
         }
+    },
+    computed: {
+         getFilterCats(){
+            let cats = [];
+            for(let cat of this.categories){
+                cat['sub_cats']=this.secondCats.filter((el) => el.primary_category_id == cat.id);
+
+                cats.push(cat);
+            }
+            return cats;
+            
+        },
     },
     methods:{
         async getCategories(){
             const res = await this.callApi('get', 'primarycategorylist');
             if(res.status == 200){
                 this.categories = res.data;
+            }
+        },
+
+        async secondCategory(){
+            const res = await this.callApi('get', 'secondarytertiarycatgeorylist');
+            if(res.status == 200){
+                this.secondCats = res.data;
             }
         },
 
@@ -94,6 +137,7 @@ export default {
          this.homeSlider();
          this.getCategories();
          this.leftThreeProducts();
+         this.secondCategory();
     }
 }
 </script>
